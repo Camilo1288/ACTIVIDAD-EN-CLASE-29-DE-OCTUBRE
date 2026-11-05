@@ -94,7 +94,38 @@ public class Demo {
         ordenar.accept(a);
         mostrar("Despues", a);
     }
-    
+    // ---------- NUEVO: registros mock y tiempos ----------
+static Evento[] generarMock(int n) {
+    Random rnd = new Random(42);
+    Evento[] datos = new Evento[n];
+    for (int i = 0; i < n; i++)
+        datos[i] = eFecha(i, rnd.nextInt(10), rnd.nextInt(10000));
+    return datos;
+}
+
+static void medir(String nombre, String criterio, Evento[] base, Consumer<Evento[]> ordenar) {
+    Evento[] copia = base.clone();
+    long ini = System.nanoTime();
+    ordenar.accept(copia);
+    double ms = (System.nanoTime() - ini) / 1_000_000.0;
+    System.out.println(String.format("%-10s (%-9s): %10.3f ms", nombre, criterio, ms));
+}
+
+static void medirTiempos(int n) {
+    System.out.println("--- Tiempos con " + n + " registros mock ---");
+    Evento[] base = generarMock(n);
+    Comparator<Evento> f = Ordenamientos.POR_FECHA;
+    medir("Bubble", "fecha", base, a -> Ordenamientos.bubble(a, f));
+    medir("Selection", "fecha", base, a -> Ordenamientos.selection(a, f));
+    medir("Insertion", "fecha", base, a -> Ordenamientos.insertion(a, f));
+    medir("Merge", "fecha", base, a -> Ordenamientos.merge(a, f));
+    medir("Quick", "fecha", base, a -> Ordenamientos.quick(a, f));
+    medir("Heap", "fecha", base, a -> Ordenamientos.heap(a, f));
+    medir("Shell", "fecha", base, a -> Ordenamientos.shell(a, f));
+    medir("Counting", "prioridad", base, Ordenamientos::counting);
+    medir("Bucket", "prioridad", base, Ordenamientos::bucket);
+    medir("Radix", "id", base, Ordenamientos::radix);
+}
 
     public static void main(String[] args) {
         Comparator<Evento> c = Ordenamientos.POR_PRIORIDAD;
@@ -133,6 +164,10 @@ public class Demo {
         ejemploFecha("Bubble", a -> Ordenamientos.bubble(a, f));
         ejemploFecha("Merge", a -> Ordenamientos.merge(a, f));
         ejemploFecha("Quick", a -> Ordenamientos.quick(a, f));
+        
+        medirTiempos(1000);
+        medirTiempos(5000);
+        medirTiempos(20000);
     }
     }
 
